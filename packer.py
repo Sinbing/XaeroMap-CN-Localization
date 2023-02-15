@@ -4,39 +4,38 @@ import os
 import sys
 import shutil
 import zipfile
+import colorama
 
 
 # init.
-class colors:
-    RED       = '\033[31;1m'
-    GREEN     = '\033[32;1m'
-    YELLOW    = '\033[33;1m'
-    CYAN      = '\033[36;1m'
-
-
-if hasattr(sys, "_MEIPASS"):
-    DEBUG = False
-else:
-    DEBUG = True
-    print(colors.YELLOW+ '=====================\n 警告! 你正在DEBUG \n=====================')
+def init():
+    global DEBUG
+    colorama.init()
+    if hasattr(sys, "_MEIPASS"):
+        DEBUG = False
+        return os.path.dirname(os.path.realpath(sys.executable))
+    else:
+        DEBUG = True
+        print(colorama.Fore.CYAN + '=====================\n 警告! 你正在DEBUG \n=====================')
+        return os.path.split(os.path.realpath(__file__))[0]
 
 
 def Log(type: str, text: str):
     if type == 'debug':
         if DEBUG:
-            print(colors.CYAN+ f'DEBUG | {text}')
+            print(colorama.Fore.CYAN+ f'DEBUG | {text}')
     elif type == 'info':
-        print(colors.GREEN+ f'INFO  | {text}')
+        print(colorama.Fore.GREEN+ f'INFO  | {text}')
     elif type == 'error':
-        print(colors.RED+ f'ERROR | {text}')
+        print(colorama.Fore.RED+ f'ERROR | {text}')
     elif type == 'warn':
-        print(colors.YELLOW+ f'WARN  | {text}')
+        print(colorama.Fore.YELLOW+ f'WARN  | {text}')
 
 
-def resourcePath(filaeName):
+def resourcePath(file_name: str):
     if not DEBUG:
-        return os.path.join(sys._MEIPASS, filaeName)
-    return os.path.join(filaeName)
+        return os.path.join(sys._MEIPASS, file_name)
+    return os.path.join(file_name)
 
 
 def PauseAndExit():
@@ -111,13 +110,13 @@ def reJarFile(zip_path: str, work_path: str, file_name: str):
     Log('debug', f'zip_path: {zip_path}, work_path: {work_path}')
 
     try:
-        jarFile = zipfile.ZipFile(os.path.join(work_path, f'汉化-{file_name}_zh_CN.jar'), 'w', zipfile.ZIP_DEFLATED)
+        jar_file = zipfile.ZipFile(os.path.join(work_path, f'汉化-{file_name}_zh_CN.jar'), 'w', zipfile.ZIP_DEFLATED)
 
         for path, dir_list, file_list in os.walk(zip_path):  
             for file_name in file_list:  
                 Log('debug', f'添加文件至压缩: {os.path.join(path, file_name)}')
-                jarFile.write(os.path.join(path, file_name), os.path.join(path.replace(zip_path, ''), file_name))
-        jarFile.close()
+                jar_file.write(os.path.join(path, file_name), os.path.join(path.replace(zip_path, ''), file_name))
+        jar_file.close()
         Log('info', f'成功，已输出文件:[汉化-{file_name}_zh_CN.jar]')
 
     except PermissionError:
@@ -127,7 +126,8 @@ def reJarFile(zip_path: str, work_path: str, file_name: str):
 
 
 if __name__ == '__main__':
-    script_path = os.path.split(os.path.realpath(__file__))[0]
+    script_path = init()
+    Log('info', f'获取到运行目录：[{script_path}]')
 
     jar_file_list, jar_count = getJarFile(script_path), 1
     Log('info', f'共检测到 {len(jar_file_list)} 个JAR文件.')
